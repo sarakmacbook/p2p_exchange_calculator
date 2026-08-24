@@ -67,6 +67,43 @@
   .tab.active { background:#c5f000; color:#000; }
   .tab:active { opacity:0.8; }
 
+  /* Mode switcher */
+  .mode-switch {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin-top:14px;
+    padding:6px;
+    background:#181818;
+    border-radius:14px;
+  }
+  .mode-switch .mode-btn {
+    flex:1;
+    background:transparent;
+    border:none;
+    border-radius:10px;
+    color:#909090;
+    padding:8px 0;
+    font-size:13px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition: all 0.2s;
+    text-align:center;
+  }
+  .mode-switch .mode-btn.active {
+    background:#c5f000;
+    color:#000;
+  }
+  .mode-switch .mode-btn:active { opacity:0.8; }
+  .mode-arrow {
+    color:#5a5a5a;
+    font-size:16px;
+    font-weight:700;
+    flex-shrink:0;
+  }
+
   .result-wrap { text-align:center; margin-top:24px; cursor:pointer; position:relative; }
   .result-wrap.copied { animation: pop 0.3s ease; }
   @keyframes pop {
@@ -84,6 +121,8 @@
     .result { font-size:52px; }
     .result .unit { font-size:18px; }
     .result-wrap { margin-top:30px; }
+    .mode-switch { margin-top:16px; }
+    .mode-switch .mode-btn { font-size:14px; padding:10px 0; }
   }
 
   .fields { margin-top:24px; display:flex; flex-direction:column; gap:10px; }
@@ -149,6 +188,8 @@
     .chips { margin-top:8px; }
     .chip { padding:8px 0; font-size:12px; }
     .scale { padding-top:10px; }
+    .mode-switch { margin-top:10px; }
+    .mode-switch .mode-btn { font-size:12px; padding:6px 0; }
   }
 
   @media (max-width: 375px) {
@@ -171,6 +212,7 @@
     }
   }
 </style>
+<base target="_blank">
 </head>
 <body>
   <div class="app-frame">
@@ -179,9 +221,17 @@
       <button class="tab active" data-currency="usd">USD</button>
       <button class="tab" data-currency="iqd">IQD</button>
     </div>
+
+    <!-- Mode Switcher -->
+    <div class="mode-switch" id="modeswitch">
+      <button class="mode-btn active" data-mode="send">Send</button>
+      <span class="mode-arrow">→</span>
+      <button class="mode-btn" data-mode="receive">Receive</button>
+    </div>
+
     <div class="result-wrap" id="resulttap">
-      <div class="result-label">Receive</div>
-      <div class="result"><span id="out">0.00</span><span class="unit">USDT</span></div>
+      <div class="result-label" id="resultlabel">Receive</div>
+      <div class="result"><span id="out">0.00</span><span class="unit" id="outunit">USDT</span></div>
       <div class="result-sub" id="outsub">enter price &amp; amount</div>
       <div class="copy-hint">tap to copy</div>
     </div>
@@ -192,7 +242,7 @@
         <div class="cur" id="ratecur">USD per 1 USDT</div>
       </div>
       <div class="field">
-        <div class="flabel"><span>Amount send</span><span class="reset" id="resetamt">clear</span></div>
+        <div class="flabel"><span id="amtlabel">Amount send</span><span class="reset" id="resetamt">clear</span></div>
         <input id="amt" type="text" inputmode="decimal" placeholder="500" autocomplete="off">
         <div class="cur" id="amtcur">USD</div>
       </div>
@@ -204,7 +254,7 @@
       <button class="chip" data-v="2000">2K</button>
     </div>
     <div class="scale">
-      <div class="stitle">Scale at current rate</div>
+      <div class="stitle" id="scaletitle">Scale at current rate</div>
       <div class="srow"><span id="s1label">500 USD</span><b id="s1">—</b></div>
       <div class="srow"><span id="s2label">1,000 USD</span><b id="s2">—</b></div>
       <div class="srow"><span id="s3label">1,500 USD</span><b id="s3">—</b></div>
@@ -233,8 +283,36 @@ const CURRENCY_CONFIG = {
   }
 };
 
-// USD is priority - default currency
+// Mode config
+const MODE_CONFIG = {
+  send: {
+    resultLabel: "Receive",
+    outUnit: "USDT",
+    amtLabel: "Amount send",
+    amtCurLabel: "amtcur", // will be set from currency config
+    scaleTitle: "Scale at current rate",
+    // calculation: amount / rate = USDT
+    calc: (rate, amt) => amt / rate,
+    subText: (amt, rate, currencyLabel) => fmt(amt, 0) + " " + currencyLabel + " ÷ " + fmt(rate, 2) + " " + currencyLabel + "/USDT",
+    scaleCalc: (rate, val) => val / rate,
+    scaleUnit: "USDT"
+  },
+  receive: {
+    resultLabel: "Send",
+    outUnit: "USD", // will be overridden by currency
+    amtLabel: "Amount receive (USDT)",
+    amtCurLabel: "USDT",
+    scaleTitle: "Scale (USDT → " + "CURRENCY" + ")",
+    // calculation: USDT * rate = amount to send
+    calc: (rate, amt) => amt * rate,
+    subText: (amt, rate, currencyLabel) => fmt(amt, 2) + " USDT × " + fmt(rate, 2) + " " + currencyLabel + "/USDT",
+    scaleCalc: (rate, val) => val * rate,
+    scaleUnit: "CURRENCY" // will be overridden
+  }
+};
+
 let currentCurrency = "usd";
+let currentMode = "send";
 const rateEl = document.getElementById("rate");
 const amtEl = document.getElementById("amt");
 
@@ -242,47 +320,145 @@ const amtEl = document.getElementById("amt");
 const savedCurrency = localStorage.getItem("currency");
 if (savedCurrency) currentCurrency = savedCurrency;
 
+const savedMode = localStorage.getItem("mode");
+if (savedMode) currentMode = savedMode;
+
 const savedRate = localStorage.getItem("rate_" + currentCurrency);
 rateEl.value = savedRate || DEFAULT_RATES[currentCurrency];
-amtEl.value = localStorage.getItem("amt_" + currentCurrency) || "";
+
+// Restore amount based on mode
+const savedAmt = localStorage.getItem("amt_" + currentCurrency + "_" + currentMode);
+if (savedAmt !== null) {
+  amtEl.value = savedAmt;
+} else {
+  // fallback to old key for migration
+  const oldAmt = localStorage.getItem("amt_" + currentCurrency);
+  if (oldAmt !== null) amtEl.value = oldAmt;
+}
 
 const num = (s) => { const v = parseFloat(String(s).replace(/,/g, "")); return isFinite(v) && v > 0 ? v : 0; };
 const fmt = (n, d) => n.toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
 
 function updateUI() {
   const cfg = CURRENCY_CONFIG[currentCurrency];
+  const modeCfg = MODE_CONFIG[currentMode];
+
+  // Currency tabs
   document.querySelectorAll(".tab").forEach(t => { t.classList.toggle("active", t.dataset.currency === currentCurrency); });
+
+  // Mode buttons
+  document.querySelectorAll(".mode-btn").forEach(b => { b.classList.toggle("active", b.dataset.mode === currentMode); });
+
+  // Update labels based on mode
+  document.getElementById("resultlabel").textContent = modeCfg.resultLabel;
+  document.getElementById("outunit").textContent = currentMode === "send" ? "USDT" : cfg.amtLabel;
+  document.getElementById("amtlabel").textContent = modeCfg.amtLabel;
   document.getElementById("ratecur").textContent = cfg.rateLabel;
-  document.getElementById("amtcur").textContent = cfg.amtLabel;
-  amtEl.placeholder = cfg.placeholder;
+  document.getElementById("amtcur").textContent = currentMode === "send" ? cfg.amtLabel : "USDT";
+
+  // Placeholder
+  if (currentMode === "send") {
+    amtEl.placeholder = cfg.placeholder;
+  } else {
+    amtEl.placeholder = "100";
+  }
+
+  // Chips
   const chipsContainer = document.getElementById("chips");
   chipsContainer.innerHTML = "";
-  cfg.chips.forEach((val, i) => {
-    const btn = document.createElement("button");
-    btn.className = "chip"; btn.dataset.v = val; btn.textContent = cfg.chipLabels[i];
-    btn.addEventListener("click", () => { amtEl.value = val; render(); });
-    chipsContainer.appendChild(btn);
-  });
-  cfg.scaleLabels.forEach((label, i) => { document.getElementById("s" + (i+1) + "label").textContent = label; });
+  if (currentMode === "send") {
+    cfg.chips.forEach((val, i) => {
+      const btn = document.createElement("button");
+      btn.className = "chip"; btn.dataset.v = val; btn.textContent = cfg.chipLabels[i];
+      btn.addEventListener("click", () => { amtEl.value = val; render(); });
+      chipsContainer.appendChild(btn);
+    });
+  } else {
+    // Receive mode chips: USDT amounts
+    const receiveChips = [50, 100, 200, 500];
+    const receiveLabels = ["50", "100", "200", "500"];
+    receiveChips.forEach((val, i) => {
+      const btn = document.createElement("button");
+      btn.className = "chip"; btn.dataset.v = val; btn.textContent = receiveLabels[i];
+      btn.addEventListener("click", () => { amtEl.value = val; render(); });
+      chipsContainer.appendChild(btn);
+    });
+  }
+
+  // Scale
+  const scaleTitle = document.getElementById("scaletitle");
+  if (currentMode === "send") {
+    scaleTitle.textContent = "Scale at current rate";
+    cfg.scaleLabels.forEach((label, i) => { document.getElementById("s" + (i+1) + "label").textContent = label; });
+  } else {
+    scaleTitle.textContent = "Scale (USDT → " + cfg.amtLabel + ")";
+    const receiveScaleLabels = ["50 USDT", "100 USDT", "200 USDT", "500 USDT"];
+    receiveScaleLabels.forEach((label, i) => { document.getElementById("s" + (i+1) + "label").textContent = label; });
+  }
 }
 
 function render() {
   const r = num(rateEl.value), a = num(amtEl.value);
   const out = document.getElementById("out"), sub = document.getElementById("outsub");
   const cfg = CURRENCY_CONFIG[currentCurrency];
+  const modeCfg = MODE_CONFIG[currentMode];
+
+  // Save state
   if (r > 0) localStorage.setItem("rate_" + currentCurrency, rateEl.value.trim());
-  localStorage.setItem("amt_" + currentCurrency, amtEl.value.trim());
+  localStorage.setItem("amt_" + currentCurrency + "_" + currentMode, amtEl.value.trim());
   localStorage.setItem("currency", currentCurrency);
-  if (r > 0 && a > 0) { out.textContent = fmt(a / r, 2); sub.textContent = fmt(a, 0) + " " + cfg.amtLabel + " ÷ " + fmt(r, 2) + " " + cfg.amtLabel + "/USDT"; }
-  else { out.textContent = "0.00"; sub.textContent = r > 0 ? "enter amount" : "enter price & amount"; }
-  cfg.scaleAmounts.forEach((val, i) => { document.getElementById("s" + (i+1)).textContent = r > 0 ? fmt(val / r, 2) + " USDT" : "—"; });
+  localStorage.setItem("mode", currentMode);
+
+  if (r > 0 && a > 0) {
+    const result = modeCfg.calc(r, a);
+    if (currentMode === "send") {
+      out.textContent = fmt(result, 2);
+      sub.textContent = modeCfg.subText(a, r, cfg.amtLabel);
+    } else {
+      out.textContent = fmt(result, currentCurrency === "usd" ? 2 : 0);
+      sub.textContent = modeCfg.subText(a, r, cfg.amtLabel);
+    }
+  } else {
+    out.textContent = currentMode === "send" ? "0.00" : "0";
+    sub.textContent = r > 0 ? "enter amount" : "enter price & amount";
+  }
+
+  // Scale
+  if (currentMode === "send") {
+    cfg.scaleAmounts.forEach((val, i) => {
+      document.getElementById("s" + (i+1)).textContent = r > 0 ? fmt(val / r, 2) + " USDT" : "—";
+    });
+  } else {
+    const receiveScaleAmounts = [50, 100, 200, 500];
+    receiveScaleAmounts.forEach((val, i) => {
+      document.getElementById("s" + (i+1)).textContent = r > 0 ? fmt(val * r, currentCurrency === "usd" ? 2 : 0) + " " + cfg.amtLabel : "—";
+    });
+  }
 }
 
 function switchCurrency(curr) {
   currentCurrency = curr;
   const savedRate = localStorage.getItem("rate_" + curr);
   rateEl.value = savedRate || DEFAULT_RATES[curr];
-  amtEl.value = localStorage.getItem("amt_" + curr) || "";
+  const savedAmt = localStorage.getItem("amt_" + curr + "_" + currentMode);
+  if (savedAmt !== null) {
+    amtEl.value = savedAmt;
+  } else {
+    const oldAmt = localStorage.getItem("amt_" + curr);
+    if (oldAmt !== null) amtEl.value = oldAmt;
+    else amtEl.value = "";
+  }
+  updateUI(); render();
+}
+
+function switchMode(mode) {
+  currentMode = mode;
+  const savedAmt = localStorage.getItem("amt_" + currentCurrency + "_" + mode);
+  if (savedAmt !== null) {
+    amtEl.value = savedAmt;
+  } else {
+    amtEl.value = "";
+  }
   updateUI(); render();
 }
 
@@ -293,16 +469,14 @@ function toast(msg) {
   setTimeout(() => t.classList.remove("show"), 1200);
 }
 
-// NEW METHOD: Select text + execCommand (most reliable across all devices)
 function doCopy() {
   const outEl = document.getElementById("out");
   const rawValue = outEl.textContent;
 
-  if (rawValue === "0.00") return;
+  if (rawValue === "0.00" || rawValue === "0") return;
 
   const cleanValue = rawValue.replace(/,/g, "");
 
-  // Method 1: Create hidden textarea + select + execCommand (works everywhere)
   const ta = document.createElement("textarea");
   ta.value = cleanValue;
   ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
@@ -316,15 +490,13 @@ function doCopy() {
   } catch (e) {}
   document.body.removeChild(ta);
 
-  // Method 2: Fallback to navigator.clipboard if execCommand failed
   if (!copied && navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(cleanValue).then(() => { copied = true; }).catch(() => {});
   }
 
-  // Visual feedback
   const wrap = document.getElementById("resulttap");
   wrap.classList.remove("copied");
-  void wrap.offsetWidth; // force reflow
+  void wrap.offsetWidth;
   wrap.classList.add("copied");
 
   toast("Copied");
@@ -335,8 +507,8 @@ amtEl.addEventListener("input", render);
 document.getElementById("resetrate").addEventListener("click", () => { rateEl.value = DEFAULT_RATES[currentCurrency]; render(); });
 document.getElementById("resetamt").addEventListener("click", () => { amtEl.value = ""; render(); });
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => switchCurrency(t.dataset.currency)));
+document.querySelectorAll(".mode-btn").forEach(b => b.addEventListener("click", () => switchMode(b.dataset.mode)));
 
-// Click and touch handlers
 document.getElementById("resulttap").addEventListener("click", doCopy);
 document.getElementById("resulttap").addEventListener("touchstart", function(e) { e.preventDefault(); doCopy(); }, {passive: false});
 
