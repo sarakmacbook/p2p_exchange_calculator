@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo -e "${GREEN}"
 echo "  ╔═══════════════════════════════════════════╗"
-echo "  ║     IQD-USDT Calculator Installer         ║"
+echo "  ║     P2P Exchange Calculator Installer     ║"
 echo "  ╚═══════════════════════════════════════════╝"
 echo -e "${NC}"
 

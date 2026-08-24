@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="IQD→USDT">
+<meta name="apple-mobile-web-app-title" content="USD→USDT">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-512.png">
-<title>IQD → USDT Calculator</title>
+<title>USD → USDT Calculator</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { height:100%; }
@@ -67,7 +67,13 @@
   .tab.active { background:#c5f000; color:#000; }
   .tab:active { opacity:0.8; }
 
-  .result-wrap { text-align:center; margin-top:24px; cursor:pointer; }
+  .result-wrap { text-align:center; margin-top:24px; cursor:pointer; position:relative; }
+  .result-wrap.copied { animation: pop 0.3s ease; }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
   .result-label { font-size:13px; color:#c5f000; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
   .result { font-size:42px; font-weight:700; line-height:1; letter-spacing:-1px; font-variant-numeric:tabular-nums; }
   .result .unit { font-size:16px; font-weight:600; color:#909090; letter-spacing:0; margin-left:4px; }
@@ -170,8 +176,8 @@
   <div class="app-frame">
     <div class="label">Calculator</div>
     <div class="tabs">
-      <button class="tab active" data-currency="iqd">IQD</button>
-      <button class="tab" data-currency="usd">USD</button>
+      <button class="tab active" data-currency="usd">USD</button>
+      <button class="tab" data-currency="iqd">IQD</button>
     </div>
     <div class="result-wrap" id="resulttap">
       <div class="result-label">Receive</div>
@@ -182,60 +188,67 @@
     <div class="fields">
       <div class="field">
         <div class="flabel"><span>Unit price</span><span class="reset" id="resetrate">reset</span></div>
-        <input id="rate" type="text" inputmode="decimal" placeholder="14" autocomplete="off">
-        <div class="cur" id="ratecur">IQD per 1 USDT</div>
+        <input id="rate" type="text" inputmode="decimal" placeholder="1" autocomplete="off">
+        <div class="cur" id="ratecur">USD per 1 USDT</div>
       </div>
       <div class="field">
         <div class="flabel"><span>Amount send</span><span class="reset" id="resetamt">clear</span></div>
-        <input id="amt" type="text" inputmode="decimal" placeholder="500,000" autocomplete="off">
-        <div class="cur" id="amtcur">IQD</div>
+        <input id="amt" type="text" inputmode="decimal" placeholder="500" autocomplete="off">
+        <div class="cur" id="amtcur">USD</div>
       </div>
     </div>
     <div class="chips" id="chips">
-      <button class="chip" data-v="500000">500K</button>
-      <button class="chip" data-v="1000000">1M</button>
-      <button class="chip" data-v="1500000">1.5M</button>
-      <button class="chip" data-v="2000000">2M</button>
+      <button class="chip" data-v="500">500</button>
+      <button class="chip" data-v="1000">1K</button>
+      <button class="chip" data-v="1500">1.5K</button>
+      <button class="chip" data-v="2000">2K</button>
     </div>
     <div class="scale">
       <div class="stitle">Scale at current rate</div>
-      <div class="srow"><span id="s1label">500,000 IQD</span><b id="s1">—</b></div>
-      <div class="srow"><span id="s2label">1,000,000 IQD</span><b id="s2">—</b></div>
-      <div class="srow"><span id="s3label">1,500,000 IQD</span><b id="s3">—</b></div>
-      <div class="srow"><span id="s4label">2,000,000 IQD</span><b id="s4">—</b></div>
+      <div class="srow"><span id="s1label">500 USD</span><b id="s1">—</b></div>
+      <div class="srow"><span id="s2label">1,000 USD</span><b id="s2">—</b></div>
+      <div class="srow"><span id="s3label">1,500 USD</span><b id="s3">—</b></div>
+      <div class="srow"><span id="s4label">2,000 USD</span><b id="s4">—</b></div>
     </div>
   </div>
 
 <div class="toast" id="toast">Copied</div>
 
 <script>
-const DEFAULT_RATES = { iqd: 14, usd: 1 };
+const DEFAULT_RATES = { usd: 1, iqd: 14 };
 const CURRENCY_CONFIG = {
-  iqd: {
-    rateLabel: "IQD per 1 USDT", amtLabel: "IQD", placeholder: "500,000",
-    chips: [500000, 1000000, 1500000, 2000000],
-    chipLabels: ["500K", "1M", "1.5M", "2M"],
-    scaleAmounts: [500000, 1000000, 1500000, 2000000],
-    scaleLabels: ["500,000 IQD", "1,000,000 IQD", "1,500,000 IQD", "2,000,000 IQD"]
-  },
   usd: {
     rateLabel: "USD per 1 USDT", amtLabel: "USD", placeholder: "500",
     chips: [500, 1000, 1500, 2000],
     chipLabels: ["500", "1K", "1.5K", "2K"],
     scaleAmounts: [500, 1000, 1500, 2000],
     scaleLabels: ["500 USD", "1,000 USD", "1,500 USD", "2,000 USD"]
+  },
+  iqd: {
+    rateLabel: "IQD per 1 USDT", amtLabel: "IQD", placeholder: "500,000",
+    chips: [500000, 1000000, 1500000, 2000000],
+    chipLabels: ["500K", "1M", "1.5M", "2M"],
+    scaleAmounts: [500000, 1000000, 1500000, 2000000],
+    scaleLabels: ["500,000 IQD", "1,000,000 IQD", "1,500,000 IQD", "2,000,000 IQD"]
   }
 };
-let currentCurrency = "iqd";
+
+// USD is priority - default currency
+let currentCurrency = "usd";
 const rateEl = document.getElementById("rate");
 const amtEl = document.getElementById("amt");
+
+// restore saved state
 const savedCurrency = localStorage.getItem("currency");
 if (savedCurrency) currentCurrency = savedCurrency;
+
 const savedRate = localStorage.getItem("rate_" + currentCurrency);
 rateEl.value = savedRate || DEFAULT_RATES[currentCurrency];
 amtEl.value = localStorage.getItem("amt_" + currentCurrency) || "";
+
 const num = (s) => { const v = parseFloat(String(s).replace(/,/g, "")); return isFinite(v) && v > 0 ? v : 0; };
 const fmt = (n, d) => n.toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
+
 function updateUI() {
   const cfg = CURRENCY_CONFIG[currentCurrency];
   document.querySelectorAll(".tab").forEach(t => { t.classList.toggle("active", t.dataset.currency === currentCurrency); });
@@ -252,6 +265,7 @@ function updateUI() {
   });
   cfg.scaleLabels.forEach((label, i) => { document.getElementById("s" + (i+1) + "label").textContent = label; });
 }
+
 function render() {
   const r = num(rateEl.value), a = num(amtEl.value);
   const out = document.getElementById("out"), sub = document.getElementById("outsub");
@@ -263,6 +277,7 @@ function render() {
   else { out.textContent = "0.00"; sub.textContent = r > 0 ? "enter amount" : "enter price & amount"; }
   cfg.scaleAmounts.forEach((val, i) => { document.getElementById("s" + (i+1)).textContent = r > 0 ? fmt(val / r, 2) + " USDT" : "—"; });
 }
+
 function switchCurrency(curr) {
   currentCurrency = curr;
   const savedRate = localStorage.getItem("rate_" + curr);
@@ -270,39 +285,61 @@ function switchCurrency(curr) {
   amtEl.value = localStorage.getItem("amt_" + curr) || "";
   updateUI(); render();
 }
+
 function toast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 1200);
 }
+
+// NEW METHOD: Select text + execCommand (most reliable across all devices)
 function doCopy() {
-  const rawValue = document.getElementById("out").textContent;
+  const outEl = document.getElementById("out");
+  const rawValue = outEl.textContent;
+
   if (rawValue === "0.00") return;
+
   const cleanValue = rawValue.replace(/,/g, "");
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(cleanValue).then(() => toast("Copied")).catch(() => fallbackCopy(cleanValue));
-  } else {
-    fallbackCopy(cleanValue);
+
+  // Method 1: Create hidden textarea + select + execCommand (works everywhere)
+  const ta = document.createElement("textarea");
+  ta.value = cleanValue;
+  ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch (e) {}
+  document.body.removeChild(ta);
+
+  // Method 2: Fallback to navigator.clipboard if execCommand failed
+  if (!copied && navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(cleanValue).then(() => { copied = true; }).catch(() => {});
   }
+
+  // Visual feedback
+  const wrap = document.getElementById("resulttap");
+  wrap.classList.remove("copied");
+  void wrap.offsetWidth; // force reflow
+  wrap.classList.add("copied");
+
+  toast("Copied");
 }
-function fallbackCopy(text) {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-  try { document.execCommand("copy"); toast("Copied"); } catch (err) { toast("Copied"); }
-  document.body.removeChild(textarea);
-}
+
 rateEl.addEventListener("input", render);
 amtEl.addEventListener("input", render);
 document.getElementById("resetrate").addEventListener("click", () => { rateEl.value = DEFAULT_RATES[currentCurrency]; render(); });
 document.getElementById("resetamt").addEventListener("click", () => { amtEl.value = ""; render(); });
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => switchCurrency(t.dataset.currency)));
+
+// Click and touch handlers
 document.getElementById("resulttap").addEventListener("click", doCopy);
 document.getElementById("resulttap").addEventListener("touchstart", function(e) { e.preventDefault(); doCopy(); }, {passive: false});
+
 updateUI(); render();
 </script>
 </body>

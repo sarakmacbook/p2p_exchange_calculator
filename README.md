@@ -3,7 +3,7 @@
 > **Live Demo:** [https://sarakmacbook.github.io/p2p_exchange_calculator](https://sarakmacbook.github.io/p2p_exchange_calculator)  
 > **GitHub:** [https://github.com/sarakmacbook/p2p_exchange_calculator](https://github.com/sarakmacbook/p2p_exchange_calculator)
 
-A sleek, dark-themed **P2P exchange calculator** for converting **Iraqi Dinar (IQD)** and **US Dollar (USD)** to **USDT**. Built as a single static file — zero dependencies, blazing fast, and fully responsive across **all devices**.
+A sleek, dark-themed **P2P exchange calculator** for converting **US Dollar (USD)** and **Iraqi Dinar (IQD)** to **USDT**. Built as a single static file — zero dependencies, blazing fast, and fully responsive across **all devices**.
 
 ![Dark Theme](https://img.shields.io/badge/theme-dark-black?style=flat-square) ![PWA Ready](https://img.shields.io/badge/PWA-ready-c5f000?style=flat-square) ![Zero Dependencies](https://img.shields.io/badge/deps-zero-success?style=flat-square) ![Responsive](https://img.shields.io/badge/responsive-all_devices-blue?style=flat-square)
 
@@ -13,12 +13,12 @@ A sleek, dark-themed **P2P exchange calculator** for converting **Iraqi Dinar (I
 
 | Feature | Description |
 |---------|-------------|
-| **🔄 Dual Currency** | Switch between **IQD** and **USD** instantly |
+| **🔄 Dual Currency** | Switch between **USD** and **IQD** instantly |
 | **⚡ Real-time** | Result updates as you type — no submit button |
 | **📊 Scale Table** | See preset conversions at your current rate |
 | **📋 Tap to Copy** | One tap copies the result (works on all devices) |
 | **💾 Persistent** | Remembers your last rate & amount (localStorage) |
-| **🎯 Quick Chips** | Tap 500K / 1M / 1.5M / 2M for instant input |
+| **🎯 Quick Chips** | Tap 500 / 1K / 1.5K / 2K (USD) or 500K / 1M / 1.5M / 2M (IQD) |
 | **📱 PWA Ready** | Add to home screen on iOS & Android |
 | **🌙 Dark Mode** | Clean black theme with lime green accents |
 | **🖥️ Desktop Frame** | Phone-like centered layout on desktop |
@@ -119,28 +119,28 @@ Just upload `index.html` — it works on **any** static host:
 ```
 ┌─────────────────────────┐
 │  Calculator             │
-│  [ IQD ] [ USD ]        │
+│  [ USD ] [ IQD ]        │
 │                         │
 │       Receive           │
-│     142.86 USDT         │
-│  2,000,000 IQD ÷ 14     │
+│     500.00 USDT         │
+│  500 USD ÷ 1            │
 │      tap to copy        │
 │                         │
 │  Unit price      reset  │
-│  14                     │
-│  IQD per 1 USDT         │
+│  1                      │
+│  USD per 1 USDT         │
 │                         │
 │  Amount send     clear  │
-│  2,000,000              │
-│  IQD                    │
+│  500                    │
+│  USD                    │
 │                         │
-│  [500K][1M][1.5M][2M]  │
+│  [500][1K][1.5K][2K]   │
 │                         │
 │  Scale at current rate  │
-│  500K IQD  →  35.71     │
-│  1M IQD    →  71.43     │
-│  1.5M IQD  →  107.14    │
-│  2M IQD    →  142.86    │
+│  500 USD   →  500.00    │
+│  1K USD    →  1000.00   │
+│  1.5K USD  →  1500.00   │
+│  2K USD    →  2000.00   │
 └─────────────────────────┘
 ```
 
@@ -148,27 +148,27 @@ Just upload `index.html` — it works on **any** static host:
 ```
         ┌─────────────────────┐
         │   💱 Calculator     │
-        │  [IQD]  [USD]       │
+        │  [USD]  [IQD]       │
         │                     │
         │     Receive         │
-        │   142.86 USDT       │
+        │   500.00 USDT       │
         │    tap to copy      │
         │                     │
         │  Unit price  reset  │
-        │  14                 │
-        │  IQD per 1 USDT     │
+        │  1                  │
+        │  USD per 1 USDT     │
         │                     │
         │  Amount send clear  │
-        │  2,000,000          │
-        │  IQD                │
+        │  500                │
+        │  USD                │
         │                     │
-        │ [500K][1M][1.5M][2M]│
+        │ [500][1K][1.5K][2K]│
         │                     │
         │  Scale at rate      │
-        │  500K → 35.71       │
-        │  1M   → 71.43       │
-        │  1.5M → 107.14      │
-        │  2M   → 142.86      │
+        │  500  → 500.00      │
+        │  1K   → 1000.00     │
+        │  1.5K → 1500.00     │
+        │  2K   → 2000.00     │
         └─────────────────────┘
               ↑ lime glow
 ```
@@ -179,8 +179,8 @@ Just upload `index.html` — it works on **any** static host:
 
 | Currency | Rate |
 |----------|------|
-| **IQD** | 14 IQD = 1 USDT |
 | **USD** | 1 USD = 1 USDT |
+| **IQD** | 14 IQD = 1 USDT |
 
 Tap **reset** to restore defaults.
 
