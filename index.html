@@ -30,7 +30,7 @@
   }
   .tab.active { background:#c5f000; color:#000; }
   .tab:active { opacity:0.8; }
-  .result-wrap { text-align:center; margin-top:30px; }
+  .result-wrap { text-align:center; margin-top:30px; cursor:pointer; }
   .result-label { font-size:14px; color:#c5f000; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
   .result { font-size:48px; font-weight:700; line-height:1; letter-spacing:-1px; font-variant-numeric:tabular-nums; }
   .result .unit { font-size:18px; font-weight:600; color:#909090; letter-spacing:0; margin-left:4px; }
@@ -170,18 +170,48 @@ function switchCurrency(curr) {
   amtEl.value = localStorage.getItem("amt_" + curr) || "";
   updateUI(); render();
 }
-function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1200); }
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1200);
+}
+
+function doCopy() {
+  const outEl = document.getElementById("out");
+  const rawValue = outEl.textContent;
+  if (rawValue === "0.00") return;
+  const cleanValue = rawValue.replace(/,/g, "");
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(cleanValue).then(() => toast("Copied")).catch(() => fallbackCopy(cleanValue));
+  } else {
+    fallbackCopy(cleanValue);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand("copy");
+    toast("Copied");
+  } catch (err) {
+    toast("Copied");
+  }
+  document.body.removeChild(textarea);
+}
+
 rateEl.addEventListener("input", render);
 amtEl.addEventListener("input", render);
 document.getElementById("resetrate").addEventListener("click", () => { rateEl.value = DEFAULT_RATES[currentCurrency]; render(); });
 document.getElementById("resetamt").addEventListener("click", () => { amtEl.value = ""; render(); });
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => switchCurrency(t.dataset.currency)));
-document.getElementById("resulttap").addEventListener("click", () => {
-  const v = document.getElementById("out").textContent;
-  if (v === "0.00") return;
-  if (navigator.clipboard) { navigator.clipboard.writeText(v).then(() => toast("Copied " + v + " USDT")).catch(() => toast(v + " USDT")); }
-  else { toast(v + " USDT"); }
-});
+document.getElementById("resulttap").addEventListener("click", doCopy);
+document.getElementById("resulttap").addEventListener("touchstart", function(e) { e.preventDefault(); doCopy(); }, {passive: false});
 updateUI(); render();
 </script>
 </body>
