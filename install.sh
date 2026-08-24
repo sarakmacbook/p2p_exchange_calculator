@@ -10,6 +10,19 @@ NC='\033[0m'
 APP_NAME="iqd-usdt-calc"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# ─── FIX #2: Root check ─────────────────────────────────────────────
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}❌ This script must be run as root (use sudo).${NC}"
+    exit 1
+fi
+
+# ─── FIX #3: Verify index.html exists ───────────────────────────────
+if [ ! -f "$SCRIPT_DIR/index.html" ]; then
+    echo -e "${RED}❌ index.html not found in $SCRIPT_DIR${NC}"
+    echo -e "${YELLOW}   Make sure index.html is in the same directory as install.sh${NC}"
+    exit 1
+fi
+
 echo -e "${GREEN}"
 echo "  ╔═══════════════════════════════════════════╗"
 echo "  ║     P2P Exchange Calculator Installer     ║"
@@ -28,6 +41,12 @@ echo -e "   80  = HTTP (default)"
 echo -e "   443 = HTTPS (requires SSL setup)"
 read -rp "   Enter port [80]: " PORT
 PORT="${PORT:-80}"
+
+# ─── Validate port is numeric ───────────────────────────────────────
+if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [ "$PORT" -lt 1 ] || [ "$PORT" -gt 65535 ]; then
+    echo -e "${RED}❌ Invalid port: $PORT${NC}"
+    exit 1
+fi
 
 echo ""
 echo -e "${CYAN}⚙️  Step 3: Web Server${NC}"
@@ -48,12 +67,22 @@ echo -e "${CYAN}📁 Step 4: Where to store files${NC}"
 read -rp "   Enter path [/var/www/$APP_NAME]: " INSTALL_DIR
 INSTALL_DIR="${INSTALL_DIR:-/var/www/$APP_NAME}"
 
+# ─── FIX #6: Ask for email if domain + SSL ──────────────────────────
+CERTBOT_EMAIL=""
+if [ -n "$DOMAIN" ] && ([ "$PORT" = "443" ] || [ "$PORT" = "80" ]); then
+    echo ""
+    echo -e "${CYAN}📧 Step 5: SSL Email (for Let's Encrypt)${NC}"
+    echo -e "   Required for SSL certificate registration"
+    read -rp "   Enter email: " CERTBOT_EMAIL
+fi
+
 echo ""
 echo -e "${YELLOW}📋 Installation Summary:${NC}"
 echo -e "   Domain:    ${DOMAIN:-(IP only)}"
 echo -e "   Port:      $PORT"
 echo -e "   Service:   $SERVICE"
 echo -e "   Files:     $INSTALL_DIR"
+[ -n "$CERTBOT_EMAIL" ] && echo -e "   SSL Email: $CERTBOT_EMAIL"
 echo ""
 read -rp "   Proceed? [Y/n]: " CONFIRM
 CONFIRM="${CONFIRM:-Y}"
@@ -82,9 +111,9 @@ elif [ "$SERVICE" = "docker" ]; then
     if ! command -v docker &> /dev/null; then
         apt-get install -y -qq ca-certificates curl gnupg
         install -m 0755 -d /etc/apt/keyrings
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg' | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
         chmod a+r /etc/apt/keyrings/docker.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" | tee /etc/apt/sources.list.d/docker.list
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list
         apt-get update -qq
         apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plugin
     fi
@@ -107,28 +136,48 @@ server {
     server_name $SERVER_NAME;
     root $INSTALL_DIR;
     index index.html;
-    location / { try_files \$uri \$uri/ =404; }
-    gzip on; gzip_types text/css application/javascript application/json;
-    location ~* \.(png|jpg|jpeg|gif|ico|svg|woff|woff2)$ { expires 1y; add_header Cache-Control "public, immutable"; }
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    gzip on;
+    gzip_types text/html text/css application/javascript application/json;
+
+    location ~* \.(png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
 }
 EOF
     ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
-    nginx -t
+
+    # ─── FIX #4: nginx -t with error handling ─────────────────────
+    if ! nginx -t; then
+        echo -e "${RED}❌ Nginx config test failed. Restoring default...${NC}"
+        rm -f /etc/nginx/sites-enabled/$APP_NAME
+        nginx -t && systemctl reload nginx
+        exit 1
+    fi
+
     systemctl reload nginx
     systemctl enable nginx
+
     if [ -n "$DOMAIN" ] && ([ "$PORT" = "443" ] || [ "$PORT" = "80" ]); then
-        if command -v certbot &> /dev/null; then
+        if command -v certbot &> /dev/null && [ -n "$CERTBOT_EMAIL" ]; then
             echo -e "${YELLOW}🔒 Setting up SSL with Certbot...${NC}"
-            certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m admin@$DOMAIN || true
+            certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$CERTBOT_EMAIL" || true
         else
             echo -e "${CYAN}💡 To enable SSL later, run:${NC}"
             echo -e "   apt install certbot python3-certbot-nginx"
             echo -e "   certbot --nginx -d $DOMAIN"
         fi
     fi
+
+    # ─── FIX #1: Double quotes around PORT for ufw ────────────────
     if command -v ufw &> /dev/null && ufw status | grep -q "Status: active"; then
-        ufw allow '$PORT/tcp' || true
+        ufw allow "$PORT/tcp" || true
         ufw allow 'Nginx Full' || true
     fi
 
@@ -143,10 +192,13 @@ $BIND {
     encode gzip
 }
 EOF
-    systemctl reload caddy 2>/dev/null || systemctl restart caddy
+    # ─── FIX #5: restart instead of reload on first setup ─────────
+    systemctl restart caddy
     systemctl enable caddy
+
+    # ─── FIX #1: Double quotes around PORT for ufw ────────────────
     if command -v ufw &> /dev/null && ufw status | grep -q "Status: active"; then
-        ufw allow '$PORT/tcp' || true
+        ufw allow "$PORT/tcp" || true
     fi
 
 elif [ "$SERVICE" = "docker" ]; then
