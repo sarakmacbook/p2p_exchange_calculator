@@ -114,42 +114,24 @@ echo -e "${YELLOW}⚙️  Configuring $SERVICE...${NC}"
 
 if [ "$SERVICE" = "nginx" ]; then
     NGINX_CONF="/etc/nginx/sites-available/$APP_NAME"
-
-    if [ -n "$DOMAIN" ]; then
-        SERVER_NAME="$DOMAIN"
-    else
-        SERVER_NAME="_"
-    fi
-
+    if [ -n "$DOMAIN" ]; then SERVER_NAME="$DOMAIN"; else SERVER_NAME="_"; fi
     cat > "$NGINX_CONF" << EOF
 server {
     listen $PORT;
     server_name $SERVER_NAME;
     root $INSTALL_DIR;
     index index.html;
-
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
-
-    gzip on;
-    gzip_types text/css application/javascript application/json;
-
-    location ~* \.(png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
+    location / { try_files \$uri \$uri/ =404; }
+    gzip on; gzip_types text/css application/javascript application/json;
+    location ~* \.(png|jpg|jpeg|gif|ico|svg|woff|woff2)$ { expires 1y; add_header Cache-Control "public, immutable"; }
 }
 EOF
-
     ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
     rm -f /etc/nginx/sites-enabled/default
     nginx -t
     systemctl reload nginx
     systemctl enable nginx
-
-    # SSL with domain
-    if [ -n "$DOMAIN" ] && [ "$PORT" = "443" ] || [ "$PORT" = "80" ]; then
+    if [ -n "$DOMAIN" ] && ([ "$PORT" = "443" ] || [ "$PORT" = "80" ]); then
         if command -v certbot &> /dev/null; then
             echo -e "${YELLOW}🔒 Setting up SSL with Certbot...${NC}"
             certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m admin@$DOMAIN || true
@@ -159,8 +141,6 @@ EOF
             echo -e "   certbot --nginx -d $DOMAIN"
         fi
     fi
-
-    # Open firewall
     if command -v ufw &> /dev/null && ufw status | grep -q "Status: active"; then
         ufw allow '$PORT/tcp' || true
         ufw allow 'Nginx Full' || true
@@ -168,13 +148,7 @@ EOF
 
 elif [ "$SERVICE" = "caddy" ]; then
     CADDYFILE="/etc/caddy/Caddyfile"
-
-    if [ -n "$DOMAIN" ]; then
-        BIND="$DOMAIN:$PORT"
-    else
-        BIND=":$PORT"
-    fi
-
+    if [ -n "$DOMAIN" ]; then BIND="$DOMAIN:$PORT"; else BIND=":$PORT"; fi
     cat > "$CADDYFILE" << EOF
 $BIND {
     root * $INSTALL_DIR
@@ -183,10 +157,8 @@ $BIND {
     encode gzip
 }
 EOF
-
     systemctl reload caddy 2>/dev/null || systemctl restart caddy
     systemctl enable caddy
-
     if command -v ufw &> /dev/null && ufw status | grep -q "Status: active"; then
         ufw allow '$PORT/tcp' || true
     fi
@@ -197,39 +169,27 @@ FROM nginx:alpine
 COPY index.html /usr/share/nginx/html/index.html
 EXPOSE 80
 EOF
-
     docker build -t "$APP_NAME" "$SCRIPT_DIR"
     docker stop "$APP_NAME" 2>/dev/null || true
     docker rm "$APP_NAME" 2>/dev/null || true
-    docker run -d \
-        --name "$APP_NAME" \
-        --restart unless-stopped \
-        -p "$PORT:80" \
-        "$APP_NAME"
-
+    docker run -d --name "$APP_NAME" --restart unless-stopped -p "$PORT:80" "$APP_NAME"
     echo -e "${YELLOW}🐳 Docker container running!${NC}"
 fi
 
-# ── Get IP ───────────────────────────────────
 IP=$(hostname -I | awk '{print $1}')
-
-# ── Done ─────────────────────────────────────
 echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║     ✅ Installation Complete!             ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${GREEN}🌐 Access your calculator:${NC}"
-if [ -n "$DOMAIN" ]; then
-    echo -e "   http://$DOMAIN${PORT:+:$PORT}"
-fi
+if [ -n "$DOMAIN" ]; then echo -e "   http://$DOMAIN${PORT:+:$PORT}"; fi
 echo -e "   http://$IP${PORT:+:$PORT}"
 echo ""
 echo -e "${GREEN}📂 Files stored at:${NC}"
 echo -e "   $INSTALL_DIR"
 echo ""
-echo -e "${GREEN}🔧 Service:${NC}"
-echo -e "   $SERVICE"
+echo -e "${GREEN}🔧 Service: $SERVICE${NC}"
 if [ "$SERVICE" = "docker" ]; then
     echo -e "   Container: $APP_NAME"
     echo -e "   ${CYAN}docker logs -f $APP_NAME${NC} to view logs"
