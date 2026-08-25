@@ -179,6 +179,102 @@
   }
   .toast.show { opacity:1; }
 
+  /* === FIND RATE PANEL === */
+  .find-rate-toggle {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    margin-top:12px;
+    padding:8px;
+    background:transparent;
+    border:1px dashed #2a2a2a;
+    border-radius:12px;
+    color:#5a5a5a;
+    font-size:12px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition: all 0.2s;
+    width:100%;
+  }
+  .find-rate-toggle:hover { border-color:#c5f000; color:#c5f000; }
+  .find-rate-toggle svg { width:14px; height:14px; fill:currentColor; }
+
+  .find-rate-panel {
+    margin-top:10px;
+    background:#0f0f0f;
+    border:1px solid #1a1a1a;
+    border-radius:16px;
+    padding:14px 16px;
+    display:none;
+    animation: slideDown 0.25s ease;
+  }
+  .find-rate-panel.open { display:block; }
+  @keyframes slideDown {
+    from { opacity:0; transform: translateY(-6px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  .find-rate-panel .fr-title {
+    font-size:12px; color:#c5f000; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.5px;
+    margin-bottom:10px; display:flex; align-items:center; gap:6px;
+  }
+  .find-rate-panel .fr-title svg { width:14px; height:14px; fill:#c5f000; }
+
+  .find-rate-panel .fr-row {
+    display:flex; gap:8px; margin-bottom:8px;
+  }
+  .find-rate-panel .fr-field {
+    flex:1; background:#181818; border-radius:12px; padding:10px 12px;
+  }
+  .find-rate-panel .fr-field .fr-label {
+    font-size:10px; color:#5a5a5a; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;
+  }
+  .find-rate-panel .fr-field input {
+    width:100%; background:transparent; border:none; outline:none; color:#fff;
+    font-size:18px; font-weight:700; font-family:inherit;
+    font-variant-numeric:tabular-nums; user-select:text; -webkit-user-select:text;
+  }
+  .find-rate-panel .fr-field input::placeholder { color:#3d3d3d; font-weight:400; }
+  .find-rate-panel .fr-field .fr-cur {
+    font-size:10px; color:#3d3d3d; margin-top:2px;
+  }
+
+  .find-rate-panel .fr-result {
+    background:#181818; border-radius:12px; padding:10px 12px;
+    margin-bottom:10px; cursor:pointer; transition: background 0.15s;
+  }
+  .find-rate-panel .fr-result:hover { background:#1f1f1f; }
+  .find-rate-panel .fr-result .fr-res-label {
+    font-size:10px; color:#5a5a5a; margin-bottom:2px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .find-rate-panel .fr-result .fr-res-label .fr-use {
+    color:#c5f000; font-weight:600; font-size:10px; text-transform:uppercase;
+  }
+  .find-rate-panel .fr-result .fr-res-value {
+    font-size:22px; font-weight:700; color:#fff; font-variant-numeric:tabular-nums;
+  }
+  .find-rate-panel .fr-result .fr-res-formula {
+    font-size:10px; color:#3d3d3d; margin-top:2px;
+  }
+
+  .find-rate-panel .fr-btn {
+    width:100%; background:#c5f000; color:#000; border:none; border-radius:12px;
+    padding:10px 0; font-size:13px; font-weight:700; font-family:inherit;
+    cursor:pointer; transition: opacity 0.15s;
+  }
+  .find-rate-panel .fr-btn:active { opacity:0.8; }
+  .find-rate-panel .fr-btn:disabled { background:#2a2a2a; color:#5a5a5a; cursor:not-allowed; }
+
+  .find-rate-panel .fr-close {
+    text-align:center; margin-top:8px;
+    font-size:11px; color:#3d3d3d; cursor:pointer;
+  }
+  .find-rate-panel .fr-close:active { color:#5a5a5a; }
+
   @media (max-height: 500px) and (orientation: landscape) {
     .result-wrap { margin-top:12px; }
     .result { font-size:32px; }
@@ -190,6 +286,9 @@
     .scale { padding-top:10px; }
     .mode-switch { margin-top:10px; }
     .mode-switch .mode-btn { font-size:12px; padding:6px 0; }
+    .find-rate-panel { padding:10px 12px; }
+    .find-rate-panel .fr-field input { font-size:16px; }
+    .find-rate-panel .fr-result .fr-res-value { font-size:18px; }
   }
 
   @media (max-width: 375px) {
@@ -197,6 +296,7 @@
     .result .unit { font-size:14px; }
     .field input { font-size:22px; }
     .chip { font-size:12px; padding:9px 0; }
+    .find-rate-panel .fr-field input { font-size:16px; }
   }
 
   @media (min-width: 768px) and (max-width: 1023px) {
@@ -227,6 +327,42 @@
       <button class="mode-btn active" data-mode="send">Send</button>
       <span class="mode-arrow">→</span>
       <button class="mode-btn" data-mode="receive">Receive</button>
+    </div>
+
+    <!-- Find Rate Toggle -->
+    <button class="find-rate-toggle" id="findRateToggle">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+      Find Unit Price
+    </button>
+
+    <!-- Find Rate Panel -->
+    <div class="find-rate-panel" id="findRatePanel">
+      <div class="fr-title">
+        <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+        Calculate Rate from Trade
+      </div>
+      <div class="fr-row">
+        <div class="fr-field">
+          <div class="fr-label" id="frPaidLabel">Amount Paid</div>
+          <input id="frPaid" type="text" inputmode="decimal" placeholder="1000" autocomplete="off">
+          <div class="fr-cur" id="frPaidCur">USD</div>
+        </div>
+        <div class="fr-field">
+          <div class="fr-label">USDT Received</div>
+          <input id="frReceived" type="text" inputmode="decimal" placeholder="980" autocomplete="off">
+          <div class="fr-cur">USDT</div>
+        </div>
+      </div>
+      <div class="fr-result" id="frResult" style="display:none;">
+        <div class="fr-res-label">
+          <span>Unit Price</span>
+          <span class="fr-use">Tap to use</span>
+        </div>
+        <div class="fr-res-value" id="frResValue">—</div>
+        <div class="fr-res-formula" id="frResFormula">—</div>
+      </div>
+      <button class="fr-btn" id="frCalcBtn" disabled>Enter both values</button>
+      <div class="fr-close" id="frClose">Close</div>
     </div>
 
     <div class="result-wrap" id="resulttap">
@@ -289,9 +425,8 @@ const MODE_CONFIG = {
     resultLabel: "Receive",
     outUnit: "USDT",
     amtLabel: "Amount send",
-    amtCurLabel: "amtcur", // will be set from currency config
+    amtCurLabel: "amtcur",
     scaleTitle: "Scale at current rate",
-    // calculation: amount / rate = USDT
     calc: (rate, amt) => amt / rate,
     subText: (amt, rate, currencyLabel) => fmt(amt, 0) + " " + currencyLabel + " ÷ " + fmt(rate, 2) + " " + currencyLabel + "/USDT",
     scaleCalc: (rate, val) => val / rate,
@@ -299,15 +434,14 @@ const MODE_CONFIG = {
   },
   receive: {
     resultLabel: "Send",
-    outUnit: "USD", // will be overridden by currency
+    outUnit: "USD",
     amtLabel: "Amount receive (USDT)",
     amtCurLabel: "USDT",
     scaleTitle: "Scale (USDT → " + "CURRENCY" + ")",
-    // calculation: USDT * rate = amount to send
     calc: (rate, amt) => amt * rate,
     subText: (amt, rate, currencyLabel) => fmt(amt, 2) + " USDT × " + fmt(rate, 2) + " " + currencyLabel + "/USDT",
     scaleCalc: (rate, val) => val * rate,
-    scaleUnit: "CURRENCY" // will be overridden
+    scaleUnit: "CURRENCY"
   }
 };
 
@@ -315,6 +449,19 @@ let currentCurrency = "usd";
 let currentMode = "send";
 const rateEl = document.getElementById("rate");
 const amtEl = document.getElementById("amt");
+
+// Find Rate elements
+const findRateToggle = document.getElementById("findRateToggle");
+const findRatePanel = document.getElementById("findRatePanel");
+const frPaid = document.getElementById("frPaid");
+const frReceived = document.getElementById("frReceived");
+const frResult = document.getElementById("frResult");
+const frResValue = document.getElementById("frResValue");
+const frResFormula = document.getElementById("frResFormula");
+const frCalcBtn = document.getElementById("frCalcBtn");
+const frClose = document.getElementById("frClose");
+const frPaidLabel = document.getElementById("frPaidLabel");
+const frPaidCur = document.getElementById("frPaidCur");
 
 // restore saved state
 const savedCurrency = localStorage.getItem("currency");
@@ -326,12 +473,10 @@ if (savedMode) currentMode = savedMode;
 const savedRate = localStorage.getItem("rate_" + currentCurrency);
 rateEl.value = savedRate || DEFAULT_RATES[currentCurrency];
 
-// Restore amount based on mode
 const savedAmt = localStorage.getItem("amt_" + currentCurrency + "_" + currentMode);
 if (savedAmt !== null) {
   amtEl.value = savedAmt;
 } else {
-  // fallback to old key for migration
   const oldAmt = localStorage.getItem("amt_" + currentCurrency);
   if (oldAmt !== null) amtEl.value = oldAmt;
 }
@@ -343,27 +488,25 @@ function updateUI() {
   const cfg = CURRENCY_CONFIG[currentCurrency];
   const modeCfg = MODE_CONFIG[currentMode];
 
-  // Currency tabs
   document.querySelectorAll(".tab").forEach(t => { t.classList.toggle("active", t.dataset.currency === currentCurrency); });
-
-  // Mode buttons
   document.querySelectorAll(".mode-btn").forEach(b => { b.classList.toggle("active", b.dataset.mode === currentMode); });
 
-  // Update labels based on mode
   document.getElementById("resultlabel").textContent = modeCfg.resultLabel;
   document.getElementById("outunit").textContent = currentMode === "send" ? "USDT" : cfg.amtLabel;
   document.getElementById("amtlabel").textContent = modeCfg.amtLabel;
   document.getElementById("ratecur").textContent = cfg.rateLabel;
   document.getElementById("amtcur").textContent = currentMode === "send" ? cfg.amtLabel : "USDT";
 
-  // Placeholder
   if (currentMode === "send") {
     amtEl.placeholder = cfg.placeholder;
   } else {
     amtEl.placeholder = "100";
   }
 
-  // Chips
+  // Update Find Rate labels
+  frPaidLabel.textContent = "Amount Paid (" + cfg.amtLabel + ")";
+  frPaidCur.textContent = cfg.amtLabel;
+
   const chipsContainer = document.getElementById("chips");
   chipsContainer.innerHTML = "";
   if (currentMode === "send") {
@@ -374,7 +517,6 @@ function updateUI() {
       chipsContainer.appendChild(btn);
     });
   } else {
-    // Receive mode chips: USDT amounts
     const receiveChips = [50, 100, 200, 500];
     const receiveLabels = ["50", "100", "200", "500"];
     receiveChips.forEach((val, i) => {
@@ -385,7 +527,6 @@ function updateUI() {
     });
   }
 
-  // Scale
   const scaleTitle = document.getElementById("scaletitle");
   if (currentMode === "send") {
     scaleTitle.textContent = "Scale at current rate";
@@ -403,7 +544,6 @@ function render() {
   const cfg = CURRENCY_CONFIG[currentCurrency];
   const modeCfg = MODE_CONFIG[currentMode];
 
-  // Save state
   if (r > 0) localStorage.setItem("rate_" + currentCurrency, rateEl.value.trim());
   localStorage.setItem("amt_" + currentCurrency + "_" + currentMode, amtEl.value.trim());
   localStorage.setItem("currency", currentCurrency);
@@ -423,7 +563,6 @@ function render() {
     sub.textContent = r > 0 ? "enter amount" : "enter price & amount";
   }
 
-  // Scale
   if (currentMode === "send") {
     cfg.scaleAmounts.forEach((val, i) => {
       document.getElementById("s" + (i+1)).textContent = r > 0 ? fmt(val / r, 2) + " USDT" : "—";
@@ -502,6 +641,65 @@ function doCopy() {
   toast("Copied");
 }
 
+// ===== FIND RATE LOGIC =====
+function updateFindRate() {
+  const paid = num(frPaid.value);
+  const received = num(frReceived.value);
+  const cfg = CURRENCY_CONFIG[currentCurrency];
+
+  if (paid > 0 && received > 0) {
+    const rate = paid / received;
+    const decimals = currentCurrency === "usd" ? 4 : 2;
+    frResValue.textContent = fmt(rate, decimals) + " " + cfg.amtLabel + "/USDT";
+    frResFormula.textContent = fmt(paid, currentCurrency === "usd" ? 2 : 0) + " " + cfg.amtLabel + " ÷ " + fmt(received, 2) + " USDT";
+    frResult.style.display = "block";
+    frCalcBtn.textContent = "Use this rate";
+    frCalcBtn.disabled = false;
+  } else {
+    frResult.style.display = "none";
+    frCalcBtn.disabled = true;
+    if (paid === 0 && received === 0) {
+      frCalcBtn.textContent = "Enter both values";
+    } else if (paid === 0) {
+      frCalcBtn.textContent = "Enter amount paid";
+    } else {
+      frCalcBtn.textContent = "Enter USDT received";
+    }
+  }
+}
+
+function useFoundRate() {
+  const paid = num(frPaid.value);
+  const received = num(frReceived.value);
+  if (paid > 0 && received > 0) {
+    const rate = paid / received;
+    const decimals = currentCurrency === "usd" ? 4 : 2;
+    rateEl.value = rate.toFixed(decimals);
+    render();
+    findRatePanel.classList.remove("open");
+    toast("Rate applied");
+    // Save to localStorage
+    localStorage.setItem("rate_" + currentCurrency, rateEl.value);
+  }
+}
+
+findRateToggle.addEventListener("click", () => {
+  findRatePanel.classList.toggle("open");
+  if (findRatePanel.classList.contains("open")) {
+    frPaid.focus();
+  }
+});
+
+frClose.addEventListener("click", () => {
+  findRatePanel.classList.remove("open");
+});
+
+frPaid.addEventListener("input", updateFindRate);
+frReceived.addEventListener("input", updateFindRate);
+frCalcBtn.addEventListener("click", useFoundRate);
+frResult.addEventListener("click", useFoundRate);
+
+// ===== MAIN EVENT LISTENERS =====
 rateEl.addEventListener("input", render);
 amtEl.addEventListener("input", render);
 document.getElementById("resetrate").addEventListener("click", () => { rateEl.value = DEFAULT_RATES[currentCurrency]; render(); });
