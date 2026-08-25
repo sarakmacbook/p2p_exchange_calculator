@@ -23,26 +23,30 @@
     padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 18px);
     user-select:none; -webkit-user-select:none;
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   @media (min-width: 768px) {
     body {
       align-items:center;
       justify-content:center;
-      padding: 40px;
+      padding: 20px;
+      overflow: hidden;
     }
     .app-frame {
       width:100%;
       max-width:420px;
-      max-height:900px;
+      max-height: calc(100vh - 40px);
+      max-height: calc(100dvh - 40px);
       background:#000;
       border-radius:24px;
       border:1px solid #222;
       box-shadow:0 0 60px rgba(197,240,0,0.08);
-      overflow:hidden;
+      overflow: hidden;
       display:flex;
       flex-direction:column;
-      padding:calc(env(safe-area-inset-top) + 18px) 20px calc(env(safe-area-inset-bottom) + 18px);
+      padding:calc(env(safe-area-inset-top) + 14px) 20px calc(env(safe-area-inset-bottom) + 14px);
     }
   }
   @media (min-width: 1024px) {
@@ -53,15 +57,17 @@
   @media (max-width: 767px) {
     .app-frame {
       width:100%; height:100%; display:flex; flex-direction:column;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
   }
 
   .label { font-size:13px; color:#909090; letter-spacing:.5px; text-transform:uppercase; }
 
-  .tabs { display:flex; gap:8px; margin-top:12px; }
+  .tabs { display:flex; gap:8px; margin-top:10px; }
   .tab {
     flex:1; background:#181818; border:none; border-radius:12px; color:#909090;
-    padding:12px 0; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer;
+    padding:10px 0; font-size:14px; font-weight:600; font-family:inherit; cursor:pointer;
     transition: all 0.2s;
   }
   .tab.active { background:#c5f000; color:#000; }
@@ -73,8 +79,8 @@
     align-items:center;
     justify-content:center;
     gap:10px;
-    margin-top:14px;
-    padding:6px;
+    margin-top:10px;
+    padding:5px;
     background:#181818;
     border-radius:14px;
   }
@@ -84,7 +90,7 @@
     border:none;
     border-radius:10px;
     color:#909090;
-    padding:8px 0;
+    padding:7px 0;
     font-size:13px;
     font-weight:600;
     font-family:inherit;
@@ -104,71 +110,73 @@
     flex-shrink:0;
   }
 
-  .result-wrap { text-align:center; margin-top:24px; cursor:pointer; position:relative; }
+  .result-wrap { text-align:center; margin-top:16px; cursor:pointer; position:relative; }
   .result-wrap.copied { animation: pop 0.3s ease; }
   @keyframes pop {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
     100% { transform: scale(1); }
   }
-  .result-label { font-size:13px; color:#c5f000; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .result-label { font-size:13px; color:#c5f000; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
   .result { font-size:42px; font-weight:700; line-height:1; letter-spacing:-1px; font-variant-numeric:tabular-nums; }
   .result .unit { font-size:16px; font-weight:600; color:#909090; letter-spacing:0; margin-left:4px; }
-  .result-sub { margin-top:6px; font-size:12px; color:#5a5a5a; font-variant-numeric:tabular-nums; }
-  .copy-hint { margin-top:4px; font-size:10px; color:#3d3d3d; }
+  .result-sub { margin-top:4px; font-size:12px; color:#5a5a5a; font-variant-numeric:tabular-nums; }
+  .copy-hint { margin-top:2px; font-size:10px; color:#3d3d3d; }
 
   @media (min-width: 768px) {
-    .result { font-size:52px; }
-    .result .unit { font-size:18px; }
-    .result-wrap { margin-top:30px; }
-    .mode-switch { margin-top:16px; }
-    .mode-switch .mode-btn { font-size:14px; padding:10px 0; }
+    .result { font-size:48px; }
+    .result .unit { font-size:16px; }
+    .result-wrap { margin-top:14px; }
+    .mode-switch { margin-top:10px; }
+    .mode-switch .mode-btn { font-size:13px; padding:7px 0; }
+    .tabs { margin-top:8px; }
+    .tab { padding:9px 0; }
   }
 
-  .fields { margin-top:24px; display:flex; flex-direction:column; gap:10px; }
-  .field { background:#181818; border-radius:16px; padding:12px 16px; }
-  .field .flabel { font-size:11px; color:#909090; margin-bottom:4px; display:flex; justify-content:space-between; }
+  .fields { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+  .field { background:#181818; border-radius:16px; padding:10px 14px; }
+  .field .flabel { font-size:11px; color:#909090; margin-bottom:3px; display:flex; justify-content:space-between; }
   .field .flabel .reset { color:#c5f000; font-weight:600; cursor:pointer; font-size:11px; }
   .field input {
     width:100%; background:transparent; border:none; outline:none; color:#fff;
-    font-size:24px; font-weight:700; font-family:inherit;
+    font-size:22px; font-weight:700; font-family:inherit;
     font-variant-numeric:tabular-nums; user-select:text; -webkit-user-select:text;
   }
   .field input::placeholder { color:#3d3d3d; font-weight:400; }
-  .field .cur { font-size:12px; color:#5a5a5a; font-weight:600; margin-top:2px; }
+  .field .cur { font-size:11px; color:#5a5a5a; font-weight:600; margin-top:1px; }
 
   @media (min-width: 768px) {
-    .fields { margin-top:28px; gap:12px; }
-    .field { padding:14px 18px; }
-    .field input { font-size:28px; }
-    .field .flabel { font-size:12px; }
-    .field .flabel .reset { font-size:12px; }
+    .fields { margin-top:14px; gap:8px; }
+    .field { padding:10px 16px; }
+    .field input { font-size:24px; }
+    .field .flabel { font-size:11px; }
+    .field .flabel .reset { font-size:11px; }
   }
 
-  .chips { display:flex; gap:8px; margin-top:10px; }
+  .chips { display:flex; gap:6px; margin-top:8px; }
   .chip {
     flex:1; background:#181818; border:none; border-radius:12px; color:#fff;
-    padding:10px 0; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer;
+    padding:8px 0; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer;
   }
   .chip:active { background:#2a2a2a; }
 
   @media (min-width: 768px) {
-    .chips { margin-top:12px; }
-    .chip { padding:12px 0; font-size:14px; }
+    .chips { margin-top:8px; }
+    .chip { padding:8px 0; font-size:13px; }
   }
 
-  .scale { margin-top:auto; padding-top:18px; }
+  .scale { margin-top:auto; padding-top:12px; }
   .scale .srow {
-    display:flex; justify-content:space-between; padding:9px 4px;
-    border-bottom:1px solid #161616; font-size:14px; color:#909090;
+    display:flex; justify-content:space-between; padding:7px 4px;
+    border-bottom:1px solid #161616; font-size:13px; color:#909090;
     font-variant-numeric:tabular-nums;
   }
   .scale .srow b { color:#c5f000; font-weight:700; }
-  .scale .stitle { font-size:11px; color:#5a5a5a; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+  .scale .stitle { font-size:10px; color:#5a5a5a; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
 
   @media (min-width: 768px) {
-    .scale { padding-top:22px; }
-    .scale .srow { font-size:15px; padding:10px 4px; }
+    .scale { padding-top:10px; }
+    .scale .srow { font-size:13px; padding:6px 4px; }
   }
 
   .toast {
@@ -185,8 +193,8 @@
     align-items:center;
     justify-content:center;
     gap:6px;
-    margin-top:12px;
-    padding:8px;
+    margin-top:8px;
+    padding:6px;
     background:transparent;
     border:1px dashed #2a2a2a;
     border-radius:12px;
@@ -202,11 +210,11 @@
   .find-rate-toggle svg { width:14px; height:14px; fill:currentColor; }
 
   .find-rate-panel {
-    margin-top:10px;
+    margin-top:8px;
     background:#0f0f0f;
     border:1px solid #1a1a1a;
     border-radius:16px;
-    padding:14px 16px;
+    padding:10px 14px;
     display:none;
     animation: slideDown 0.25s ease;
   }
@@ -219,32 +227,32 @@
   .find-rate-panel .fr-title {
     font-size:12px; color:#c5f000; font-weight:700;
     text-transform:uppercase; letter-spacing:0.5px;
-    margin-bottom:10px; display:flex; align-items:center; gap:6px;
+    margin-bottom:8px; display:flex; align-items:center; gap:6px;
   }
   .find-rate-panel .fr-title svg { width:14px; height:14px; fill:#c5f000; }
 
   .find-rate-panel .fr-row {
-    display:flex; gap:8px; margin-bottom:8px;
+    display:flex; gap:8px; margin-bottom:6px;
   }
   .find-rate-panel .fr-field {
-    flex:1; background:#181818; border-radius:12px; padding:10px 12px;
+    flex:1; background:#181818; border-radius:12px; padding:8px 10px;
   }
   .find-rate-panel .fr-field .fr-label {
-    font-size:10px; color:#5a5a5a; margin-bottom:3px; text-transform:uppercase; letter-spacing:0.3px;
+    font-size:10px; color:#5a5a5a; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.3px;
   }
   .find-rate-panel .fr-field input {
     width:100%; background:transparent; border:none; outline:none; color:#fff;
-    font-size:18px; font-weight:700; font-family:inherit;
+    font-size:16px; font-weight:700; font-family:inherit;
     font-variant-numeric:tabular-nums; user-select:text; -webkit-user-select:text;
   }
   .find-rate-panel .fr-field input::placeholder { color:#3d3d3d; font-weight:400; }
   .find-rate-panel .fr-field .fr-cur {
-    font-size:10px; color:#3d3d3d; margin-top:2px;
+    font-size:10px; color:#3d3d3d; margin-top:1px;
   }
 
   .find-rate-panel .fr-result {
-    background:#181818; border-radius:12px; padding:10px 12px;
-    margin-bottom:10px; cursor:pointer; transition: background 0.15s;
+    background:#181818; border-radius:12px; padding:8px 10px;
+    margin-bottom:8px; cursor:pointer; transition: background 0.15s;
   }
   .find-rate-panel .fr-result:hover { background:#1f1f1f; }
   .find-rate-panel .fr-result .fr-res-label {
@@ -255,40 +263,40 @@
     color:#c5f000; font-weight:600; font-size:10px; text-transform:uppercase;
   }
   .find-rate-panel .fr-result .fr-res-value {
-    font-size:22px; font-weight:700; color:#fff; font-variant-numeric:tabular-nums;
+    font-size:20px; font-weight:700; color:#fff; font-variant-numeric:tabular-nums;
   }
   .find-rate-panel .fr-result .fr-res-formula {
-    font-size:10px; color:#3d3d3d; margin-top:2px;
+    font-size:10px; color:#3d3d3d; margin-top:1px;
   }
 
   .find-rate-panel .fr-btn {
     width:100%; background:#c5f000; color:#000; border:none; border-radius:12px;
-    padding:10px 0; font-size:13px; font-weight:700; font-family:inherit;
+    padding:8px 0; font-size:13px; font-weight:700; font-family:inherit;
     cursor:pointer; transition: opacity 0.15s;
   }
   .find-rate-panel .fr-btn:active { opacity:0.8; }
   .find-rate-panel .fr-btn:disabled { background:#2a2a2a; color:#5a5a5a; cursor:not-allowed; }
 
   .find-rate-panel .fr-close {
-    text-align:center; margin-top:8px;
+    text-align:center; margin-top:6px;
     font-size:11px; color:#3d3d3d; cursor:pointer;
   }
   .find-rate-panel .fr-close:active { color:#5a5a5a; }
 
   @media (max-height: 500px) and (orientation: landscape) {
-    .result-wrap { margin-top:12px; }
-    .result { font-size:32px; }
-    .fields { margin-top:14px; gap:8px; }
-    .field { padding:10px 14px; }
-    .field input { font-size:20px; }
-    .chips { margin-top:8px; }
-    .chip { padding:8px 0; font-size:12px; }
-    .scale { padding-top:10px; }
-    .mode-switch { margin-top:10px; }
-    .mode-switch .mode-btn { font-size:12px; padding:6px 0; }
-    .find-rate-panel { padding:10px 12px; }
-    .find-rate-panel .fr-field input { font-size:16px; }
-    .find-rate-panel .fr-result .fr-res-value { font-size:18px; }
+    .result-wrap { margin-top:10px; }
+    .result { font-size:28px; }
+    .fields { margin-top:10px; gap:6px; }
+    .field { padding:8px 12px; }
+    .field input { font-size:18px; }
+    .chips { margin-top:6px; }
+    .chip { padding:6px 0; font-size:11px; }
+    .scale { padding-top:8px; }
+    .mode-switch { margin-top:8px; }
+    .mode-switch .mode-btn { font-size:11px; padding:5px 0; }
+    .find-rate-panel { padding:8px 10px; }
+    .find-rate-panel .fr-field input { font-size:14px; }
+    .find-rate-panel .fr-result .fr-res-value { font-size:16px; }
   }
 
   @media (max-width: 375px) {
@@ -307,11 +315,12 @@
 
   @media (min-width: 1400px) {
     .app-frame {
-      max-width:480px;
+      max-width:440px;
       border-radius:28px;
     }
   }
 </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -463,23 +472,10 @@ const frClose = document.getElementById("frClose");
 const frPaidLabel = document.getElementById("frPaidLabel");
 const frPaidCur = document.getElementById("frPaidCur");
 
-// restore saved state
-const savedCurrency = localStorage.getItem("currency");
-if (savedCurrency) currentCurrency = savedCurrency;
-
-const savedMode = localStorage.getItem("mode");
-if (savedMode) currentMode = savedMode;
-
-const savedRate = localStorage.getItem("rate_" + currentCurrency);
-rateEl.value = savedRate || DEFAULT_RATES[currentCurrency];
-
-const savedAmt = localStorage.getItem("amt_" + currentCurrency + "_" + currentMode);
-if (savedAmt !== null) {
-  amtEl.value = savedAmt;
-} else {
-  const oldAmt = localStorage.getItem("amt_" + currentCurrency);
-  if (oldAmt !== null) amtEl.value = oldAmt;
-}
+// NO localStorage - data resets on every refresh
+// Initialize with defaults
+rateEl.value = DEFAULT_RATES[currentCurrency];
+amtEl.value = "";
 
 const num = (s) => { const v = parseFloat(String(s).replace(/,/g, "")); return isFinite(v) && v > 0 ? v : 0; };
 const fmt = (n, d) => n.toLocaleString("en-US", {minimumFractionDigits: d, maximumFractionDigits: d});
@@ -544,10 +540,7 @@ function render() {
   const cfg = CURRENCY_CONFIG[currentCurrency];
   const modeCfg = MODE_CONFIG[currentMode];
 
-  if (r > 0) localStorage.setItem("rate_" + currentCurrency, rateEl.value.trim());
-  localStorage.setItem("amt_" + currentCurrency + "_" + currentMode, amtEl.value.trim());
-  localStorage.setItem("currency", currentCurrency);
-  localStorage.setItem("mode", currentMode);
+  // NO localStorage persistence - data clears on refresh
 
   if (r > 0 && a > 0) {
     const result = modeCfg.calc(r, a);
@@ -577,27 +570,14 @@ function render() {
 
 function switchCurrency(curr) {
   currentCurrency = curr;
-  const savedRate = localStorage.getItem("rate_" + curr);
-  rateEl.value = savedRate || DEFAULT_RATES[curr];
-  const savedAmt = localStorage.getItem("amt_" + curr + "_" + currentMode);
-  if (savedAmt !== null) {
-    amtEl.value = savedAmt;
-  } else {
-    const oldAmt = localStorage.getItem("amt_" + curr);
-    if (oldAmt !== null) amtEl.value = oldAmt;
-    else amtEl.value = "";
-  }
+  rateEl.value = DEFAULT_RATES[curr];
+  amtEl.value = "";
   updateUI(); render();
 }
 
 function switchMode(mode) {
   currentMode = mode;
-  const savedAmt = localStorage.getItem("amt_" + currentCurrency + "_" + mode);
-  if (savedAmt !== null) {
-    amtEl.value = savedAmt;
-  } else {
-    amtEl.value = "";
-  }
+  amtEl.value = "";
   updateUI(); render();
 }
 
@@ -741,7 +721,7 @@ function useFoundRate() {
     render();
     findRatePanel.classList.remove("open");
     toast("Rate applied");
-    localStorage.setItem("rate_" + currentCurrency, rateEl.value);
+    // NO localStorage - rate also clears on refresh
   }
 }
 
