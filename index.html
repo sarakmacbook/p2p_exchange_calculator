@@ -608,6 +608,11 @@ function toast(msg) {
   setTimeout(() => t.classList.remove("show"), 1200);
 }
 
+/* ========== UNIVERSAL COPY ENGINE ==========
+   Works across ALL platforms: iOS Safari, Android Chrome, 
+   desktop browsers, in-app webviews, and PWA contexts.
+   Uses a cascading fallback strategy for maximum compatibility.
+*/
 function doCopy() {
   const outEl = document.getElementById("out");
   const rawValue = outEl.textContent;
@@ -616,28 +621,86 @@ function doCopy() {
 
   const cleanValue = rawValue.replace(/,/g, "");
 
+  // --- Strategy 1: Modern Clipboard API (works on HTTPS + permission) ---
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(cleanValue)
+      .then(() => {
+        showCopyFeedback();
+      })
+      .catch((err) => {
+        // Permission denied or API failed — fall through to legacy
+        copyFallback(cleanValue);
+      });
+    return;
+  }
+
+  // --- Strategy 2: Legacy execCommand (broadest compatibility) ---
+  copyFallback(cleanValue);
+}
+
+function copyFallback(text) {
+  // Create a hidden, selectable textarea
   const ta = document.createElement("textarea");
-  ta.value = cleanValue;
-  ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;pointer-events:none;";
   document.body.appendChild(ta);
+
+  // Select the text using multiple methods for cross-platform reliability
   ta.focus();
   ta.select();
+  ta.setSelectionRange(0, ta.value.length); // iOS Safari needs this
 
   let copied = false;
   try {
     copied = document.execCommand("copy");
-  } catch (e) {}
-  document.body.removeChild(ta);
-
-  if (!copied && navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(cleanValue).then(() => { copied = true; }).catch(() => {});
+  } catch (e) {
+    copied = false;
   }
 
+  document.body.removeChild(ta);
+
+  if (copied) {
+    showCopyFeedback();
+  } else {
+    // --- Strategy 3: iOS-specific workaround ---
+    // On iOS, execCommand often fails in standalone/PWA mode.
+    // We use a range selection on the actual visible element.
+    copyIOSFallback(text);
+  }
+}
+
+function copyIOSFallback(text) {
+  const outEl = document.getElementById("out");
+  const range = document.createRange();
+  const selection = window.getSelection();
+
+  range.selectNodeContents(outEl);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch (e) {
+    copied = false;
+  }
+
+  selection.removeAllRanges();
+
+  if (copied) {
+    showCopyFeedback();
+  } else {
+    // Last resort: show the value in a toast so user can manually copy
+    toast("Value: " + text);
+  }
+}
+
+function showCopyFeedback() {
   const wrap = document.getElementById("resulttap");
   wrap.classList.remove("copied");
-  void wrap.offsetWidth;
+  void wrap.offsetWidth; // force reflow
   wrap.classList.add("copied");
-
   toast("Copied");
 }
 
@@ -678,7 +741,6 @@ function useFoundRate() {
     render();
     findRatePanel.classList.remove("open");
     toast("Rate applied");
-    // Save to localStorage
     localStorage.setItem("rate_" + currentCurrency, rateEl.value);
   }
 }
@@ -707,8 +769,29 @@ document.getElementById("resetamt").addEventListener("click", () => { amtEl.valu
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => switchCurrency(t.dataset.currency)));
 document.querySelectorAll(".mode-btn").forEach(b => b.addEventListener("click", () => switchMode(b.dataset.mode)));
 
-document.getElementById("resulttap").addEventListener("click", doCopy);
-document.getElementById("resulttap").addEventListener("touchstart", function(e) { e.preventDefault(); doCopy(); }, {passive: false});
+// Unified tap handler — works for click, touch, and pointer events
+const resultTap = document.getElementById("resulttap");
+
+// Prevent 300ms delay on mobile by using touchend
+let touchStarted = false;
+resultTap.addEventListener("touchstart", function(e) {
+  touchStarted = true;
+}, { passive: true });
+
+resultTap.addEventListener("touchend", function(e) {
+  if (touchStarted) {
+    e.preventDefault();
+    doCopy();
+    touchStarted = false;
+  }
+}, { passive: false });
+
+resultTap.addEventListener("click", function(e) {
+  // Only fire if touch didn't already handle it
+  if (!touchStarted) {
+    doCopy();
+  }
+});
 
 updateUI(); render();
 </script>
